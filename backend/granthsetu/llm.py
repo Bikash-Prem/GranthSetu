@@ -24,6 +24,8 @@ from .config import settings
 
 log = logging.getLogger("granthsetu.llm")
 
+OPENAI_URL = "https://api.openai.com/v1"
+OPENAI_PREFERRED = ["gpt-4.1-mini", "gpt-4o-mini", "gpt-4.1", "gpt-4o"]
 PREFERRED = ["gemma-4-31b-it", "gemma-4-26b-a4b-it", "gemma-4-12b-it", "gemma-4-e4b-it", "gemma-3-27b-it"]
 
 
@@ -64,6 +66,15 @@ class GemmaClient:
     # ------------------------------------------------------------------
     def _choose(self) -> None:
         want = settings.llm_provider.lower()
+        if want in ("auto", "openai") and settings.openai_api_key:
+            try:
+                self.model = settings.openai_model or self._discover_openai()
+                self.vision_model = self.model
+                self.provider = "openai"
+                return
+            except Exception as exc:
+                self.last_error = f"OpenAI API init failed: {str(exc)[:200]}"
+                log.warning(self.last_error)
         if want in ("auto", "gemini") and settings.gemini_api_key:
             try:
                 from google import genai
@@ -77,16 +88,34 @@ class GemmaClient:
                 self.last_error = f"Gemini API init failed: {exc}"
                 log.warning(self.last_error)
         if want in ("auto", "ollama"):
-            try:
-                r = httpx.get(f"{settings.ollama_url}/api/tags", timeout=3)
-                names = [m["name"] for m in r.json().get("models", [])]
-                match = [n for n in names if n.split(":")[0] == settings.ollama_llm_model.split(":")[0] or n == settings.ollama_llm_model]
-                if match:
-                    self.provider, self.model, self.vision_model = "ollama", match[0], match[0]
-                    return
-            except Exception:
-                pass
+            local = self._ollama_model()
+            if local:
+                self.provider, self.model, self.vision_model = "ollama", local, local
+                return
         self.provider = "none"
+
+    @staticmethod
+    def _ollama_model() -> str:
+        try:
+            r = httpx.get(f"{settings.ollama_url}/api/tags", timeout=3)
+            names = [m["name"] for m in r.json().get("models", [])]
+        except Exception:
+            return ""
+        want = settings.ollama_llm_model
+        if want in names:
+            return want
+        match = [n for n in names if n.split(":")[0] == want.split(":")[0]]
+        return match[0] if match else ""
+
+    @staticmethod
+    def _discover_openai() -> str:
+        r = httpx.get(f"{OPENAI_URL}/models", headers={"Authorization": f"Bearer {settings.openai_api_key}"}, timeout=10)
+        r.raise_for_status()
+        names = {m["id"] for m in r.json().get("data", [])}
+        for p in OPENAI_PREFERRED:
+            if p in names:
+                return p
+        raise LLMError("no supported chat model visible to this OpenAI key")
 
     def _discover(self) -> str:
         names = [m.name.removeprefix("models/") for m in self._client.models.list()]
@@ -108,7 +137,7 @@ class GemmaClient:
             "provider": self.provider,
             "model": self.model,
             "vision_model": self.vision_model,
-            "data_leaves_device": self.provider == "gemini",
+            "data_leaves_device": self.provider in ("gemini", "openai"),
             "last_error": self.last_error,
         }
 
@@ -165,18 +194,54 @@ class GemmaClient:
                 ),
             )
             return resp.text or ""
-        # Ollama (local, offline)
+        if self.provider == "openai":
+            content: Any = prompt
+            if image is not None:
+                url = f"data:{mime};base64,{base64.b64encode(image).decode()}"
+                content = [{"type": "text", "text": prompt}, {"type": "image_url", "image_url": {"url": url}}]
+            r = httpx.post(
+                f"{OPENAI_URL}/chat/completions",
+                headers={"Authorization": f"Bearer {settings.openai_api_key}"},
+                json={"model": self.model, "messages": [{"role": "user", "content": content}],
+                      "temperature": 0.1, "max_tokens": 2048},
+                timeout=settings.llm_timeout_s,
+            )
+            if r.status_code >= 400:
+                # Never raise_for_status here: keep the provider's reason, drop the request (and its key).
+                raise RuntimeError(f"OpenAI {r.status_code}: {r.text[:200]}")
+            return r.json()["choices"][0]["message"]["content"] or ""
+        return self._ollama_chat(self.model, prompt, image)
+
+    @staticmethod
+    def _ollama_chat(model: str, prompt: str, media: bytes | None) -> str:
+        """Local, offline. Ollama takes images and WAV audio alike in the `images` field."""
         msg: dict[str, Any] = {"role": "user", "content": prompt}
-        if image is not None:
-            msg["images"] = [base64.b64encode(image).decode()]
+        if media is not None:
+            msg["images"] = [base64.b64encode(media).decode()]
         r = httpx.post(
             f"{settings.ollama_url}/api/chat",
-            json={"model": self.model, "messages": [msg], "stream": False, "format": "json",
-                  "options": {"temperature": 0.1}},
+            # Thinking is on by default for Gemma 4 and multiplies CPU latency; the JSON tasks don't need it.
+            json={"model": model, "messages": [msg], "stream": False, "format": "json", "think": False,
+                  "keep_alive": "30m", "options": {"temperature": 0.1}},
             timeout=settings.llm_timeout_s * 3,
         )
         r.raise_for_status()
         return r.json()["message"]["content"]
+
+    def audio_model(self) -> str:
+        """Hosted Gemma on the Gemini API rejects audio, so speech always goes to a local Gemma in Ollama."""
+        return self.model if self.provider == "ollama" else self._ollama_model()
+
+    def transcribe_json(self, prompt: str, wav: bytes) -> Any:
+        model = self.audio_model()
+        if not model:
+            raise LLMError("no local Gemma model in Ollama for voice input")
+        try:
+            return parse_json_loose(self._ollama_chat(model, prompt, wav))
+        except LLMError:
+            raise
+        except Exception as exc:
+            raise LLMError(f"{type(exc).__name__}: {str(exc)[:200]}")
 
 
 _llm: GemmaClient | None = None

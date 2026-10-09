@@ -68,7 +68,7 @@ function App() {
   const { user, can } = useSession();
   const p = route.path;
   const seg = p.split("/").filter(Boolean);
-  const aiLabel = !sys ? "connecting…" : sys.ai.provider === "none" ? "AI off · retrieval only" : `${sys.ai.provider === "gemini" ? "Gemma via Gemini API" : "Local Gemma"} · ${sys.ai.model}`;
+  const aiLabel = !sys ? "connecting…" : sys.ai.provider === "none" ? "AI off · retrieval only" : `${sys.ai.provider === "gemini" ? "Gemma via Gemini API" : sys.ai.provider === "openai" ? "OpenAI" : "Local Gemma"} · ${sys.ai.model}`;
 
   return (
     <>

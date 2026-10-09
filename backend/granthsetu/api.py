@@ -218,8 +218,41 @@ async def scan(file: UploadFile = File(...)) -> dict:
     out["provider"] = llm.provider
     out["ms"] = int((time.time() - t0) * 1000)
     out["privacy"] = ("Photo was sent to Google's Gemini API for reading and was not stored by GranthSetu."
-                      if llm.provider == "gemini" else "Photo was processed by a local model and was not stored.")
+                      if llm.provider == "gemini" else
+                      "Photo was sent to OpenAI's API for reading and was not stored by GranthSetu."
+                      if llm.provider == "openai" else "Photo was processed by a local model and was not stored.")
     return out
+
+
+MAX_AUDIO_BYTES = 2 * 1024 * 1024
+MAX_AUDIO_S = 30
+
+
+@app.post("/api/transcribe", dependencies=[Depends(limiter("transcribe", "rate_scan_per_min"))])
+async def transcribe(file: UploadFile = File(...), lang: str = "en") -> dict:
+    import wave
+
+    data = await file.read(MAX_AUDIO_BYTES + 1)
+    if len(data) > MAX_AUDIO_BYTES:
+        raise HTTPException(413, "Recording too long. Keep it under 30 seconds.")
+    try:
+        with wave.open(io.BytesIO(data)) as w:
+            secs = w.getnframes() / float(w.getframerate())
+    except Exception:
+        raise HTTPException(415, "Not a valid WAV recording.")
+    if secs > MAX_AUDIO_S:
+        raise HTTPException(413, "Recording too long. Keep it under 30 seconds.")
+    if secs < 0.4:
+        raise HTTPException(422, "The recording was too short. Hold on a moment longer and speak.")
+    llm = get_llm()
+    if not llm.audio_model():
+        raise HTTPException(503, "Voice input needs a local Gemma model running in Ollama. Type your question instead.")
+    t0 = time.time()
+    try:
+        text = ai_tasks.transcribe(data, lang)  # the recording is never written to disk or cache
+    except LLMError as exc:
+        raise HTTPException(502, f"Could not transcribe the recording ({exc}). You can type instead.")
+    return {"text": text, "provider": "ollama", "ms": int((time.time() - t0) * 1000)}
 
 
 class LessonIn(BaseModel):

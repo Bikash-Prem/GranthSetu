@@ -87,7 +87,7 @@ export default function SystemPage() {
           <KV k="Reasoning" v={s.ai.provider === "none" ? "off" : `${s.ai.model} (${s.ai.provider})`} />
           <KV k="Vision" v={s.ai.provider === "none" ? "off" : s.ai.vision_model} />
           <KV k="Embeddings" v={`${s.embedder.name}${s.embedder.open_weight ? " · open weights" : ""}${s.embedder.semantic ? "" : " · lexical fallback"}`} />
-          <KV k="Query data leaves server" v={s.ai.data_leaves_device ? "yes, to Gemini API" : "no"} />
+          <KV k="Query data leaves server" v={s.ai.data_leaves_device ? (s.ai.provider === "openai" ? "yes, to OpenAI API" : "yes, to Gemini API") : "no"} />
           {s.ai.last_error && <div className="tiny" style={{ color: "var(--bad)", marginTop: 6 }}>{s.ai.last_error}</div>}
         </div>
       </div>

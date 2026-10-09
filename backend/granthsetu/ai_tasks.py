@@ -182,6 +182,19 @@ If you cannot read the image, set readability to "unreadable" and leave other fi
 
 
 # ---------------------------------------------------------------------------
+def transcribe(audio_wav: bytes, lang: str) -> str:
+    name = LANG_NAMES.get(lang, "English")
+    prompt = f"""This audio is a student asking a question aloud in {name}.
+Transcribe exactly what is said, in {name} written in its own script. Do not translate and do not answer the question.
+Reply with ONLY a JSON object: {{"text": "the spoken words"}}
+If there is no clear speech, reply {{"text": ""}}."""
+    data = get_llm().transcribe_json(prompt, audio_wav)
+    if not isinstance(data, dict):
+        raise LLMError("transcribe: expected an object")
+    return _str(data.get("text"), 500)
+
+
+# ---------------------------------------------------------------------------
 def practice_questions(target_lang: str, passages: list[dict]) -> list[dict]:
     blocks = "\n\n".join(f'<P{p["pid"]}>\n{_clean(p["text"])}\n</P{p["pid"]}>' for p in passages)
     tl = LANG_NAMES.get(target_lang, "English")

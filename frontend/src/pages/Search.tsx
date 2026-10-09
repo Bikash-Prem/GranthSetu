@@ -23,10 +23,31 @@ const VOICE: [string, string][] = [
   ["en-IN", "English"],
 ];
 
-// Minimal typing for the browser Web Speech API.
-type SR = { lang: string; interimResults: boolean; maxAlternatives: number; start: () => void; stop: () => void;
-  onresult: ((e: { results: { 0: { transcript: string } }[] & { length: number } }) => void) | null;
-  onerror: ((e: { error: string }) => void) | null; onend: (() => void) | null };
+const MAX_REC_MS = 20000;
+
+// The server transcribes 16 kHz mono WAV; browsers record webm/ogg, so convert here.
+async function toWav(blob: Blob): Promise<Blob> {
+  const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  const ctx = new AC();
+  const decoded = await ctx.decodeAudioData(await blob.arrayBuffer());
+  void ctx.close();
+  const rate = 16000;
+  const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(decoded.duration * rate)), rate);
+  const src = off.createBufferSource();
+  src.buffer = decoded;
+  src.connect(off.destination);
+  src.start();
+  const pcm = (await off.startRendering()).getChannelData(0);
+  const buf = new ArrayBuffer(44 + pcm.length * 2);
+  const v = new DataView(buf);
+  const str = (o: number, s: string) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); str(8, "WAVE"); str(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  str(36, "data"); v.setUint32(40, pcm.length * 2, true);
+  for (let i = 0; i < pcm.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, pcm[i])) * 0x7fff, true);
+  return new Blob([buf], { type: "audio/wav" });
+}
 
 // Keep the last answer so "Back to results" from the lesson pack doesn't lose it.
 let lastResponse: SearchResponse | null = null;
@@ -44,7 +65,8 @@ export default function SearchPage({ initial, onLesson }: { initial: string; onL
   const [voiceNote, setVoiceNote] = useState<string | null>(null);
   const [picked, setPicked] = useState<number[]>([]);
   const [liveMsg, setLiveMsg] = useState<string | null>(null);
-  const recRef = useRef<SR | null>(null);
+  const [transcribing, setTranscribing] = useState(false);
+  const recRef = useRef<MediaRecorder | null>(null);
   const lastQuery = useRef("");
 
   const run = async (query = q, m = mode) => {
@@ -97,47 +119,57 @@ export default function SearchPage({ initial, onLesson }: { initial: string; onL
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [res?.live_fetch_job]);
 
-  const startVoice = () => {
-    const W = window as unknown as { SpeechRecognition?: new () => SR; webkitSpeechRecognition?: new () => SR };
-    const Ctor = W.SpeechRecognition || W.webkitSpeechRecognition;
-    if (!Ctor) {
-      setVoiceNote("Voice input isn't supported in this browser. Please type instead (Chrome or Edge support it).");
-      return;
-    }
+  const startVoice = async () => {
     if (listening) {
       recRef.current?.stop();
       return;
     }
-    const rec = new Ctor();
-    rec.lang = voiceLang;
-    rec.interimResults = false;
-    rec.maxAlternatives = 1;
-    rec.onresult = (e) => {
-      const t = e.results[0][0].transcript;
-      setQ(t);
-      setVoiceNote("Check the transcript, edit if needed, then search.");
-    };
-    const VOICE_ERRORS: Record<string, string> = {
-      "not-allowed": "Microphone permission was denied. Allow the microphone for this site in the address bar, then try again.",
-      "service-not-allowed": "This browser blocks its speech service. Use Chrome or Edge, or type instead.",
-      "audio-capture": "No microphone was found. Check that one is connected and enabled in Windows sound settings.",
-      "no-speech": "No speech was heard. Press the mic and speak right away.",
-      network: "Voice input needs an internet connection to the browser's speech service. Check your connection, or type instead.",
-    };
-    rec.onerror = (e) => setVoiceNote(VOICE_ERRORS[e.error] || `Voice error: ${e.error}. You can type instead.`);
-    rec.onend = () => {
+    if (transcribing) return;
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setVoiceNote("This browser can't record audio. Please type instead.");
+      return;
+    }
+    let stream: MediaStream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+      const name = (e as DOMException).name;
+      setVoiceNote(
+        name === "NotAllowedError" ? "Microphone permission was denied. Allow the microphone for this site in the address bar, then try again."
+        : name === "NotFoundError" ? "No microphone was found. Check that one is connected and enabled in Windows sound settings."
+        : "Could not open the microphone. Close other apps that are using it and try again.");
+      return;
+    }
+    const lang = voiceLang.slice(0, 2);
+    const chunks: Blob[] = [];
+    const rec = new MediaRecorder(stream);
+    const autoStop = window.setTimeout(() => { if (rec.state === "recording") rec.stop(); }, MAX_REC_MS);
+    rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = async () => {
+      window.clearTimeout(autoStop);
+      stream.getTracks().forEach((t) => t.stop());
       setListening(false);
-      setVoiceNote((n) => (n === "Listening… speak now." ? null : n));
+      setTranscribing(true);
+      setVoiceNote("Transcribing your question…");
+      try {
+        const wav = await toWav(new Blob(chunks, { type: rec.mimeType }));
+        const r = await api.upload<{ text: string }>(`/transcribe?lang=${lang}`, new File([wav], "question.wav", { type: "audio/wav" }));
+        if (r.text) {
+          setQ(r.text);
+          setVoiceNote("Check the transcript, edit if needed, then search.");
+        } else {
+          setVoiceNote("No speech was heard. Press the mic and try again.");
+        }
+      } catch (e) {
+        setVoiceNote(e instanceof ApiError ? e.message : "Could not process the recording. You can type instead.");
+      } finally {
+        setTranscribing(false);
+      }
     };
     recRef.current = rec;
-    try {
-      rec.start();
-      setListening(true);
-      setVoiceNote("Listening… speak now.");
-    } catch {
-      setListening(false);
-      setVoiceNote("Could not start voice input. Reload the page and try again, or type instead.");
-    }
+    rec.start();
+    setListening(true);
+    setVoiceNote("Recording… press the mic again when you finish (20 seconds max).");
   };
 
   const toggle = (id: number) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : p.length < 5 ? [...p, id] : p));
@@ -166,7 +198,7 @@ export default function SearchPage({ initial, onLesson }: { initial: string; onL
           }}
         />
         <div className="bar">
-          <button className={`btn icon ${listening ? "rec" : ""}`} onClick={startVoice} title={listening ? "Stop" : "Speak"} aria-label="Voice input">
+          <button className={`btn icon ${listening ? "rec" : ""}`} onClick={startVoice} disabled={transcribing} title={listening ? "Stop recording" : transcribing ? "Transcribing…" : "Speak"} aria-label="Voice input">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v4" /></svg>
           </button>
           <select className="field" value={voiceLang} onChange={(e) => setVoiceLang(e.target.value)} aria-label="Voice language">
@@ -223,6 +255,7 @@ function Results({ res, picked, toggle, liveMsg, onLesson }: { res: SearchRespon
             {res.subject && res.subject !== "general" ? ` · ${res.subject}` : ""} · {res.timings.total_ms} ms
             {res.cached ? " · from cache" : ""} · served by {res.served_by}
             {res.ai.data_sent_to_google ? " · query processed by Gemma via Google's Gemini API" : ""}
+            {res.ai.provider === "openai" && res.mode === "agent" ? " · query processed by OpenAI's API" : ""}
           </div>
           {liveMsg && <div className="small" style={{ marginTop: 6 }}><span className="badge accent">live</span> {liveMsg}</div>}
         </div>

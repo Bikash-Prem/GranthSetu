@@ -39,7 +39,9 @@ class Settings:
     redis_url: str = os.getenv("REDIS_URL", "")
 
     # --- AI ------------------------------------------------------------
-    llm_provider: str = os.getenv("LLM_PROVIDER", "auto")  # auto|gemini|ollama|none
+    llm_provider: str = os.getenv("LLM_PROVIDER", "auto")  # auto|openai|gemini|ollama|none
+    openai_api_key: str = os.getenv("OPENAI_API_KEY", "") or os.getenv("OPENAI_KEY", "")
+    openai_model: str = os.getenv("OPENAI_MODEL", "")  # empty -> auto-discover
     gemini_api_key: str = os.getenv("GEMINI_API_KEY", "")
     gemma_model: str = os.getenv("GEMMA_MODEL", "")  # empty -> auto-discover
     gemma_vision_model: str = os.getenv("GEMMA_VISION_MODEL", "")
