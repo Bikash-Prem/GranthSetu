@@ -1,0 +1,16 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+frontend/dist/
+backend/data/
+data/*.db
+data/*.db-*
+.DS_Store
+*.rdb
+backups/
+data/private_files/
+backend/data/private_files/
+acceptance_state.json

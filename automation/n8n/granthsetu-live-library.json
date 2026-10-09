@@ -1,0 +1,186 @@
+{
+ "name": "GranthSetu \u2013 live library automation",
+ "nodes": [
+  {
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "hours",
+       "hoursInterval": 6
+      }
+     ]
+    }
+   },
+   "name": "Every 6 hours",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    0
+   ]
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "={{ $env.GRANTHSETU_URL }}/api/admin/refresh",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "X-Admin-Token",
+       "value": "={{ $env.GRANTHSETU_AUTOMATION_TOKEN }}"
+      }
+     ]
+    },
+    "options": {
+     "timeout": 30000
+    }
+   },
+   "name": "Refresh all seed topics",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    260,
+    0
+   ]
+  },
+  {
+   "parameters": {
+    "httpMethod": "POST",
+    "path": "granthsetu-topic",
+    "responseMode": "lastNode"
+   },
+   "name": "Teacher requests a topic (webhook)",
+   "type": "n8n-nodes-base.webhook",
+   "typeVersion": 2,
+   "position": [
+    0,
+    220
+   ],
+   "webhookId": "granthsetu-topic"
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "={{ $env.GRANTHSETU_URL }}/api/admin/ingest",
+    "sendHeaders": true,
+    "headerParameters": {
+     "parameters": [
+      {
+       "name": "X-Admin-Token",
+       "value": "={{ $env.GRANTHSETU_AUTOMATION_TOKEN }}"
+      }
+     ]
+    },
+    "options": {
+     "timeout": 30000
+    },
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify({ topic: $json.body.topic, subject: $json.body.subject || null }) }}"
+   },
+   "name": "Ingest topic live",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    260,
+    220
+   ]
+  },
+  {
+   "parameters": {
+    "rule": {
+     "interval": [
+      {
+       "field": "days",
+       "triggerAtHour": 8
+      }
+     ]
+    }
+   },
+   "name": "Daily 8 AM",
+   "type": "n8n-nodes-base.scheduleTrigger",
+   "typeVersion": 1.2,
+   "position": [
+    0,
+    440
+   ]
+  },
+  {
+   "parameters": {
+    "url": "={{ $env.GRANTHSETU_URL }}/api/gaps",
+    "options": {}
+   },
+   "name": "Read Gap Board",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    260,
+    440
+   ]
+  },
+  {
+   "parameters": {
+    "jsCode": "const gaps = $input.first().json.gaps.filter(g => g.status === 'needs_contributors');\nreturn [{ json: { open_gaps: gaps.length, summary: gaps.slice(0, 10).map(g => `${g.topic} (${g.lang}, asked ${g.hits}x)`).join('\\n') } }];"
+   },
+   "name": "Summarise gaps needing contributors",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    520,
+    440
+   ]
+  }
+ ],
+ "connections": {
+  "Every 6 hours": {
+   "main": [
+    [
+     {
+      "node": "Refresh all seed topics",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Teacher requests a topic (webhook)": {
+   "main": [
+    [
+     {
+      "node": "Ingest topic live",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Daily 8 AM": {
+   "main": [
+    [
+     {
+      "node": "Read Gap Board",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Read Gap Board": {
+   "main": [
+    [
+     {
+      "node": "Summarise gaps needing contributors",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "active": false
+}

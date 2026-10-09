@@ -1,0 +1,56 @@
+{
+  "environment": {
+    "db": "postgres",
+    "bus": "redis",
+    "ai": "none",
+    "embedder": "hash-char-ngram-768",
+    "indexed_passages": 25
+  },
+  "search_hybrid_uncached": {
+    "n": 60,
+    "p50_ms": 6.1,
+    "p95_ms": 8.5,
+    "max_ms": 10.9,
+    "failures": 0
+  },
+  "search_hybrid_cached": {
+    "n": 60,
+    "p50_ms": 4.1,
+    "p95_ms": 5.4,
+    "max_ms": 15.9,
+    "failures": 0
+  },
+  "catalogue_page": {
+    "n": 60,
+    "p50_ms": 3.8,
+    "p95_ms": 5.1,
+    "max_ms": 6.6,
+    "failures": 0
+  },
+  "reader_page": {
+    "n": 60,
+    "p50_ms": 3.6,
+    "p95_ms": 5.1,
+    "max_ms": 6.1,
+    "failures": 0
+  },
+  "denied_page_404": {
+    "n": 30,
+    "p50_ms": 2.6,
+    "p95_ms": 4.3,
+    "max_ms": 5.4,
+    "failures": 30,
+    "note": "unknown id: every response must be 404; failures counts them"
+  },
+  "book_processing": {
+    "jobs": 15,
+    "p50_ms": 577.1,
+    "max_ms": 963.5,
+    "pages_per_book_max": 2,
+    "note": "small test PDFs (1-2 pages); includes spawning the isolated extraction process"
+  },
+  "jobs_by_status": {
+    "succeeded": 15,
+    "failed": 2
+  }
+}

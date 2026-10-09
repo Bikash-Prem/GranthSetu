@@ -1,0 +1,41 @@
+PASS  stack: API ready and connected to the database  ({"ready":true,"index_version":0})
+PASS  stack: persistent PostgreSQL in use  (postgres)
+PASS  A: librarian registers, uploads, reviews, approves and publishes an open book  (PUBLISHED)
+PASS  A: appears in the public catalogue
+PASS  A: found by search (hybrid BM25 + vectors), with a page reference  (page 1)
+PASS  A: readable in the reader
+PASS  A: downloadable because its licence allows it
+SKIP  A: grounded explanation with source references  (no Gemma provider configured on this server (set GEMINI_API_KEY or Ollama))
+PASS  B: restricted book processed and published  (PUBLISHED)
+PASS  B: discoverable catalogue: metadata visible to an unauthorised user
+PASS  B: unauthorised user denied full text, in-book search and download  ([403, 403, 403])
+PASS  B: search snippets do not expose protected passages
+PASS  B: lesson pack refused  (403)
+PASS  B: entitled user can read
+PASS  B: access denied after revocation
+PASS  C: private resource is indistinguishable from a missing one  ([404, 404])
+PASS  D: withdraw accepted
+PASS  D: no longer accessible (detail, pages, download)  ([404, 404, 404])
+PASS  D: search results and caches no longer return it
+PASS  D: audit history kept
+PASS  E: failure recorded, not shown as success  (no text layer, and the licence does not allow OCR)
+PASS  E: failed resource is not publicly exposed
+      (E continues after the restart: the retry runs on the restarted worker)
+PASS  F: Kannada query detected as Kannada  (kn)
+SKIP  F: English resource found from a Kannada-only query  (needs Gemma query expansion or EmbeddingGemma; this server has ai=none, embedder=hash-char-ngram-768 (found=False, results=0, confidence=none))
+PASS  F: no unauthorised content in the answer
+SKIP  F: translated grounded explanation  (no Gemma provider configured on this server)
+PASS  G: external catalogue fetch reports its real outcome (no fake success)  (status=done added=0 errors=10)
+PASS  G: unrelated features keep working
+PASS  G: with no model, no explanation is fabricated
+
+29 of 29 checks did not fail · 0 failed · 3 skipped
+PASS  restart: API back up
+PASS  restart: withdrawn book still withdrawn and its audit trail kept
+PASS  restart: restricted book and its records persist
+PASS  restart: open book still searchable and readable
+PASS  E: retry after the worker restart accepted  ({"ok":true})
+PASS  E: processed after retry, without duplicate jobs  (PUBLISHED ['succeeded', 'failed'])
+PASS  E: failed attempt still visible as failed
+
+7 of 7 checks did not fail · 0 failed · 0 skipped

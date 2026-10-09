@@ -1,0 +1,140 @@
+# GranthSetu: full distributed stack.
+#   gateway (nginx: API gateway + load balancer + static/CDN origin)
+#     -> api x2 (stateless FastAPI replicas, scale with --scale api=N)
+#   migrate (one-shot: versioned schema migrations, runs before api/worker start)
+#   worker (Redis Streams consumer: book processing, outbox delivery, open-library harvesting)
+#   postgres-primary (writes)  -> postgres-replica (streaming replication, reads)
+#   redis (cache, rate limits, job queue, pub/sub)
+# Optional profiles: `local-ai` (Ollama: EmbeddingGemma + offline Gemma), `automation` (n8n).
+
+x-app-env: &app-env
+  DATABASE_URL: postgresql://gs:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres-primary:5432/granthsetu
+  DATABASE_READ_URL: postgresql://gs:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres-replica:5432/granthsetu
+  REDIS_URL: redis://redis:6379/0
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMMA_MODEL: ${GEMMA_MODEL:-}
+  GEMMA_VISION_MODEL: ${GEMMA_VISION_MODEL:-}
+  LLM_PROVIDER: ${LLM_PROVIDER:-auto}
+  EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-auto}
+  OLLAMA_URL: ${DOCKER_OLLAMA_URL:-http://host.docker.internal:11434}
+  OLLAMA_EMBED_MODEL: ${OLLAMA_EMBED_MODEL:-embeddinggemma}
+  OLLAMA_LLM_MODEL: ${OLLAMA_LLM_MODEL:-gemma4}
+  AUTOMATION_TOKEN: ${AUTOMATION_TOKEN:-}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  REGISTRATION_OPEN: ${REGISTRATION_OPEN:-true}
+  REQUIRE_SEPARATE_REVIEWER: ${REQUIRE_SEPARATE_REVIEWER:-false}
+  STORAGE_DIR: /data/files
+  AUTO_SEED: ${AUTO_SEED:-true}
+  REFRESH_INTERVAL_S: ${REFRESH_INTERVAL_S:-0}
+  HTTP_USER_AGENT: ${HTTP_USER_AGENT:-GranthSetu/1.0 (open-source education search)}
+
+services:
+  gateway:
+    build: { context: ., dockerfile: frontend/Dockerfile, args: { VITE_REPO_URL: "${REPO_URL:-}" } }
+    ports: ["${PORT:-8080}:80"]
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+
+  migrate:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    command: ["python", "-m", "granthsetu.manage", "migrate"]
+    environment: *app-env
+    volumes: [book-files:/data/files]   # also used by `make backup` / `make restore`
+    healthcheck: { disable: true }
+    depends_on:
+      postgres-primary: { condition: service_healthy }
+    restart: "no"
+
+  api:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    environment: *app-env
+    deploy: { replicas: 2 }
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes: [book-files:/data/files]   # private uploads: shared with the worker, never served by the gateway
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      postgres-replica: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  worker:
+    build: { context: ., dockerfile: backend/Dockerfile }
+    command: ["python", "-m", "granthsetu.ingest"]
+    environment: *app-env
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    volumes: [book-files:/data/files]
+    healthcheck: { disable: true }
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
+  postgres-primary:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gs
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: granthsetu
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD:?set REPLICATION_PASSWORD in .env}
+    command: ["postgres", "-c", "wal_level=replica", "-c", "max_wal_senders=10", "-c", "wal_keep_size=256MB", "-c", "hot_standby=on"]
+    volumes:
+      - pg-primary:/var/lib/postgresql/data
+      - ./infra/postgres/primary-init.sh:/docker-entrypoint-initdb.d/10-replication.sh:ro
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U gs -d granthsetu"], interval: 3s, retries: 30 }
+    restart: unless-stopped
+
+  postgres-replica:
+    image: postgres:16-alpine
+    user: root
+    environment:
+      POSTGRES_USER: gs
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      PRIMARY_HOST: postgres-primary
+      REPLICATION_USER: replicator
+      REPLICATION_PASSWORD: ${REPLICATION_PASSWORD:?set REPLICATION_PASSWORD in .env}
+      PGDATA: /var/lib/postgresql/data
+    entrypoint: ["/bin/sh", "/replica-entrypoint.sh"]
+    volumes:
+      - pg-replica:/var/lib/postgresql/data
+      - ./infra/postgres/replica-entrypoint.sh:/replica-entrypoint.sh:ro
+    depends_on:
+      postgres-primary: { condition: service_healthy }
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U gs -d granthsetu"], interval: 3s, retries: 60 }
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "volatile-lru"]
+    volumes: [redis-data:/data]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 3s, retries: 20 }
+    restart: unless-stopped
+
+  # ---- optional: open-weight models locally (EmbeddingGemma, Gemma for offline mode)
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["local-ai"]
+    ports: ["11434:11434"]
+    volumes: [ollama:/root/.ollama]
+    restart: unless-stopped
+
+  # ---- optional: n8n automation (scheduled refresh, topic webhook)
+  n8n:
+    image: n8nio/n8n:latest
+    profiles: ["automation"]
+    ports: ["5678:5678"]
+    environment:
+      GRANTHSETU_URL: http://gateway
+      GRANTHSETU_ADMIN_TOKEN: ${AUTOMATION_TOKEN:-}
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+    volumes: [n8n-data:/home/node/.n8n, ./automation/n8n:/workflows:ro]
+    restart: unless-stopped
+
+volumes:
+  book-files:
+  pg-primary:
+  pg-replica:
+  redis-data:
+  ollama:
+  n8n-data:

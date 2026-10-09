@@ -1,0 +1,483 @@
+{
+ "_note": "Topics only. All content is fetched LIVE from the sources' public APIs at ingestion time; licences are captured per record.",
+ "topics": [
+  {
+   "title": "Photosynthesis",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Water cycle",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Earthquake",
+   "subject": "geography",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Newton's laws of motion",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Heart",
+   "subject": "health",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Periodic table",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Constitution of India",
+   "subject": "civics",
+   "sources": [
+    "wikipedia",
+    "openlibrary",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Hampi",
+   "subject": "history",
+   "sources": [
+    "wikipedia",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Vijayanagara Empire",
+   "subject": "history",
+   "sources": [
+    "wikipedia",
+    "openlibrary",
+    "gutenberg",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Human digestive system",
+   "subject": "health",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Pythagorean theorem",
+   "subject": "mathematics",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Gravity",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Mahatma Gandhi",
+   "subject": "history",
+   "sources": [
+    "wikipedia",
+    "openlibrary",
+    "gutenberg",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Solar System",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Climate change",
+   "subject": "geography",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Acid",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Base (chemistry)",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Cell (biology)",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Karnataka",
+   "subject": "geography",
+   "sources": [
+    "wikipedia",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Electricity",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Magnetism",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Atom",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Monsoon",
+   "subject": "geography",
+   "sources": [
+    "wikipedia",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Indian independence movement",
+   "subject": "history",
+   "sources": [
+    "wikipedia",
+    "openlibrary",
+    "gutenberg",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Ashoka",
+   "subject": "history",
+   "sources": [
+    "wikipedia",
+    "openlibrary",
+    "gutenberg",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Kannada literature",
+   "subject": "literature",
+   "sources": [
+    "wikipedia",
+    "openlibrary",
+    "gutenberg",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Kuvempu",
+   "subject": "literature",
+   "sources": [
+    "wikipedia",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Fraction",
+   "subject": "mathematics",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Ecosystem",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Pollution",
+   "subject": "geography",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Light",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Sound",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Mitochondrion",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Democracy",
+   "subject": "civics",
+   "sources": [
+    "wikipedia",
+    "openlibrary",
+    "gutenberg",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Agriculture in India",
+   "subject": "geography",
+   "sources": [
+    "wikipedia",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Internet",
+   "subject": "technology",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Chemical reaction",
+   "subject": "science",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Blood",
+   "subject": "health",
+   "sources": [
+    "wikipedia",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Nutrition",
+   "subject": "health",
+   "sources": [
+    "wikipedia",
+    "wikibooks",
+    "openlibrary",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  },
+  {
+   "title": "Tuberculosis",
+   "subject": "health",
+   "sources": [
+    "wikipedia",
+    "doaj",
+    "openlibrary_borrow",
+    "googlebooks",
+    "openalex_paywalled"
+   ]
+  }
+ ]
+}

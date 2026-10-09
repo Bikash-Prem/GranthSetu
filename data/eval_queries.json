@@ -1,0 +1,249 @@
+{
+ "_note": "Hand-written evaluation queries. Labels are canonical English Wikipedia titles (topic_key). Add real queries collected from students to make this stronger.",
+ "queries": [
+  {
+   "id": "en01",
+   "lang": "en",
+   "query": "How do plants make their own food?",
+   "relevant_topics": [
+    "Photosynthesis"
+   ]
+  },
+  {
+   "id": "en02",
+   "lang": "en",
+   "query": "explain the water cycle for class 6",
+   "relevant_topics": [
+    "Water cycle"
+   ]
+  },
+  {
+   "id": "en03",
+   "lang": "en",
+   "query": "what causes earthquakes",
+   "relevant_topics": [
+    "Earthquake"
+   ]
+  },
+  {
+   "id": "en04",
+   "lang": "en",
+   "query": "Newton's laws of motion notes",
+   "relevant_topics": [
+    "Newton's laws of motion"
+   ]
+  },
+  {
+   "id": "en05",
+   "lang": "en",
+   "query": "structure of the human heart",
+   "relevant_topics": [
+    "Heart"
+   ]
+  },
+  {
+   "id": "en06",
+   "lang": "en",
+   "query": "what is the periodic table",
+   "relevant_topics": [
+    "Periodic table"
+   ]
+  },
+  {
+   "id": "en07",
+   "lang": "en",
+   "query": "fundamental rights in the Indian constitution",
+   "relevant_topics": [
+    "Constitution of India"
+   ]
+  },
+  {
+   "id": "en08",
+   "lang": "en",
+   "query": "who built the temples of Hampi",
+   "relevant_topics": [
+    "Hampi",
+    "Vijayanagara Empire"
+   ]
+  },
+  {
+   "id": "en09",
+   "lang": "en",
+   "query": "how does the digestive system work",
+   "relevant_topics": [
+    "Human digestive system"
+   ]
+  },
+  {
+   "id": "en10",
+   "lang": "en",
+   "query": "Pythagoras theorem explanation",
+   "relevant_topics": [
+    "Pythagorean theorem"
+   ]
+  },
+  {
+   "id": "hi01",
+   "lang": "hi",
+   "query": "प्रकाश संश्लेषण क्या है?",
+   "relevant_topics": [
+    "Photosynthesis"
+   ]
+  },
+  {
+   "id": "hi02",
+   "lang": "hi",
+   "query": "जल चक्र को समझाइए",
+   "relevant_topics": [
+    "Water cycle"
+   ]
+  },
+  {
+   "id": "hi03",
+   "lang": "hi",
+   "query": "गुरुत्वाकर्षण क्या होता है",
+   "relevant_topics": [
+    "Gravity"
+   ]
+  },
+  {
+   "id": "hi04",
+   "lang": "hi",
+   "query": "महात्मा गांधी के बारे में बताइए",
+   "relevant_topics": [
+    "Mahatma Gandhi"
+   ]
+  },
+  {
+   "id": "hi05",
+   "lang": "hi",
+   "query": "सौर मंडल के ग्रह",
+   "relevant_topics": [
+    "Solar System"
+   ]
+  },
+  {
+   "id": "hi06",
+   "lang": "hi",
+   "query": "मानव हृदय की संरचना",
+   "relevant_topics": [
+    "Heart"
+   ]
+  },
+  {
+   "id": "hi07",
+   "lang": "hi",
+   "query": "जलवायु परिवर्तन के कारण",
+   "relevant_topics": [
+    "Climate change"
+   ]
+  },
+  {
+   "id": "hi08",
+   "lang": "hi",
+   "query": "भारत का संविधान",
+   "relevant_topics": [
+    "Constitution of India"
+   ]
+  },
+  {
+   "id": "hi09",
+   "lang": "hi",
+   "query": "अम्ल और क्षार में अंतर",
+   "relevant_topics": [
+    "Acid",
+    "Base (chemistry)"
+   ]
+  },
+  {
+   "id": "hi10",
+   "lang": "hi",
+   "query": "कोशिका की संरचना",
+   "relevant_topics": [
+    "Cell (biology)"
+   ]
+  },
+  {
+   "id": "kn01",
+   "lang": "kn",
+   "query": "ದ್ಯುತಿಸಂಶ್ಲೇಷಣೆ ಎಂದರೇನು?",
+   "relevant_topics": [
+    "Photosynthesis"
+   ]
+  },
+  {
+   "id": "kn02",
+   "lang": "kn",
+   "query": "ಜಲಚಕ್ರ ವಿವರಿಸಿ",
+   "relevant_topics": [
+    "Water cycle"
+   ]
+  },
+  {
+   "id": "kn03",
+   "lang": "kn",
+   "query": "ಗುರುತ್ವಾಕರ್ಷಣೆ ಬಗ್ಗೆ ತಿಳಿಸಿ",
+   "relevant_topics": [
+    "Gravity"
+   ]
+  },
+  {
+   "id": "kn04",
+   "lang": "kn",
+   "query": "ವಿಜಯನಗರ ಸಾಮ್ರಾಜ್ಯದ ಇತಿಹಾಸ",
+   "relevant_topics": [
+    "Vijayanagara Empire",
+    "Hampi"
+   ]
+  },
+  {
+   "id": "kn05",
+   "lang": "kn",
+   "query": "ಸೌರವ್ಯೂಹದ ಗ್ರಹಗಳು",
+   "relevant_topics": [
+    "Solar System"
+   ]
+  },
+  {
+   "id": "kn06",
+   "lang": "kn",
+   "query": "ಮಹಾತ್ಮ ಗಾಂಧಿಯವರ ಜೀವನ",
+   "relevant_topics": [
+    "Mahatma Gandhi"
+   ]
+  },
+  {
+   "id": "kn07",
+   "lang": "kn",
+   "query": "ಮಾನವನ ಜೀರ್ಣಾಂಗ ವ್ಯವಸ್ಥೆ",
+   "relevant_topics": [
+    "Human digestive system"
+   ]
+  },
+  {
+   "id": "kn08",
+   "lang": "kn",
+   "query": "ಕರ್ನಾಟಕದ ಇತಿಹಾಸ",
+   "relevant_topics": [
+    "Karnataka",
+    "Vijayanagara Empire"
+   ]
+  },
+  {
+   "id": "kn09",
+   "lang": "kn",
+   "query": "ಭೂಕಂಪ ಹೇಗೆ ಉಂಟಾಗುತ್ತದೆ",
+   "relevant_topics": [
+    "Earthquake"
+   ]
+  },
+  {
+   "id": "kn10",
+   "lang": "kn",
+   "query": "ವಿದ್ಯುತ್ ಎಂದರೇನು",
+   "relevant_topics": [
+    "Electricity"
+   ]
+  }
+ ]
+}
